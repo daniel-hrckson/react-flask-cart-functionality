@@ -141,14 +141,12 @@ class Test_Api(TestCase):
         self.new_session.close()
 
     def test_get_specific_product(self):
-        
         items_to_find = [
             (WomenClothes, 12664693),
             (WomenClothes, 13874454),
             (MenClothes, 13404539),
             (Acessories, 13888978001),
         ]
-        
         for x in items_to_find:
             query = (
                 self.new_session.query(x[0])
@@ -162,8 +160,62 @@ class Test_Api(TestCase):
                 )
             self.assertEqual(res.status_code, 200)
             self.assertEqual(serialize_object(query), res.json())
-            
+        self.new_session.close()
+
+
+    def test_get_Acessories_by_lowest_price(self, page=1, qtd_per_page=10):
+        fshown = (page - 1) * qtd_per_page
+        lshown = page * qtd_per_page
+        query = (self.new_session.query( Acessories ).order_by(
+                Acessories
+                .price
+                .asc()
+            )
+            .all()[ fshown : lshown ]
+        )
+        self.new_session.close()
+        res = requests.get(
+            '{}/api/products?section={}&filter={}&qtd_per_page={}&page={}'.format(
+                self.baseUrl, 'Acessories', 'lowest_price', qtd_per_page, page
+            ) 
+        )
+        self.assertEqual( res.status_code, 200 )
+        self.assertEqual( res.json()['products']['0'], serialize_objects(query)[0] )
+        self.assertEqual( len(res.json()['products']), qtd_per_page )
+
+    def test_get_Acessories_by_highest_price(self, page=1, qtd_per_page=10):
+        fshown = (page - 1) * qtd_per_page
+        lshown = page * qtd_per_page
+        query = (self.new_session.query( Acessories ).order_by(
+                Acessories
+                .price
+                .desc()
+            )
+            .all()[ fshown : lshown ]
+        )
+        self.new_session.close()
+        res = requests.get(
+            '{}/api/products?section={}&filter={}&qtd_per_page={}&page={}'.format(
+                self.baseUrl, 'Acessories', 'highest_price', qtd_per_page, page
+            ) 
+        )
+        self.assertEqual( res.status_code, 200 )
+        self.assertEqual( res.json()['products']['0'], serialize_objects(query)[0] )
+        self.assertEqual( len(res.json()['products']), qtd_per_page )
+
+    def test_get_womenClothes_pagination(self, page=1, qtd_per_page=[5,10,20]):
+        for x in qtd_per_page:
+            fshown = (page - 1) * x
+            lshown = page * x
+            query = self.new_session.query( Acessories ).all()[ fshown : lshown ]
             self.new_session.close()
+            res = requests.get(
+                '{}/api/products?section={}&filter={}&qtd_per_page={}&page={}'.format(
+                    self.baseUrl, 'Acessories', 'relevance', x, page
+                ) 
+            )
+            self.assertEqual(res.status_code, 200)
+            self.assertEqual(len(res.json()['products']), x)
 
 if __name__ == '__main__':
     unittest.main()
