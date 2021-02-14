@@ -24,7 +24,7 @@ Session = sessionmaker(bind=engine)
 @Views.route('/api/products/<section>/<sku>', methods=['GET'])
 def find_one_item(section, sku):
     new_session = Session()
-    if section in sectionList:
+    if section in [x.__name__ for x in sectionList]:
         section = eval( section )
         query = (
             new_session.query(section)
@@ -34,6 +34,8 @@ def find_one_item(section, sku):
         new_session.close()
         if query != None:
             return serialize_object(query)
+        else:
+            return 'Query are None.'
     return {'message': 'Item not found.'}
 
 # @app.route('/shippingoptions/<int:qtd>')
@@ -107,8 +109,4 @@ def get_products():
             # Note that after each query the session is closed
     except Exception:
         raise Exception
-
-
-
-
-        return {'message': str(Exception)}, 405
+        return {'message': str(Exception)}, 500
