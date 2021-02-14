@@ -25,4 +25,5 @@ class Acessories(Base):
     images = Column(String, nullable=False)
 
 
-sectionList = [MenClothes, WomenClothes, Acessories]
+sectionList       = [MenClothes, WomenClothes, Acessories]
+sectionListString = ['MenClothes', 'WomenClothes', 'Acessories']
